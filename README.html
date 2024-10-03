@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu du Labyrinthe GitHub</title>
+
+    <!-- Ton style CSS -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #000428;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        /* Ton CSS pour le jeu */
+    </style>
+</head>
+<body>
+    <!-- Ton HTML pour la structure du jeu -->
+    <h1>Labyrinthe GitHub</h1>
+    <p>Atteins la sortie avant la fin du temps !</p>
+    <div id="timer">Temps restant : <span id="time">30</span> secondes</div>
+
+    <div id="game-container">
+        <canvas id="mazeCanvas" width="500" height="500"></canvas>
+        <div class="player" id="player" style="left: 0px; top: 0px;"></div>
+    </div>
+
+    <div id="message-box">
+        <h2>Félicitations !</h2>
+        <p>Bravo tu as gagné ! Je t'invite à boire un verre avec moi, PARTANTE ?</p>
+        <button id="start-button">OK</button>
+    </div>
+
+    <!-- Ton script JavaScript -->
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const playerElement = document.getElementById('player');
+        const messageBox = document.getElementById('message-box');
+        const timerElement = document.getElementById('time');
+        const startButton = document.getElementById('start-button');
+
+        const cellSize = 50;
+        const cols = canvas.width / cellSize;
+        const rows = canvas.height / cellSize;
+
+        let player = { x: 0, y: 0 };
+        const exit = { x: cols - 1, y: rows - 1 };
+        let timeRemaining = 30;
+        let gameActive = true;
+
+        const maze = [
+            [0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 0, 1, 1, 0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+            [1, 1, 1, 0, 1, 1, 1, 0, 1, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 1, 1, 1, 1, 0, 0, 0]
+        ];
+
+        function drawMaze() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = col * cellSize;
+                    const y = row * cellSize;
+                    ctx.fillStyle = maze[row][col] === 1 ? '#2d3436' : '#dfe6e9';
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                }
+            }
+            ctx.fillStyle = '#00cec9';
+            ctx.fillRect(exit.x * cellSize, exit.y * cellSize, cellSize, cellSize);
+        }
+
+        function movePlayer(dx, dy) {
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && maze[newY][newX] === 0) {
+                player.x = newX;
+                player.y = newY;
+
+                playerElement.style.left = player.x * cellSize + 'px';
+                playerElement.style.top = player.y * cellSize + 'px';
+
+                if (player.x === exit.x && player.y === exit.y) {
+                    endGame(true);
+                }
+            }
+        }
+
+        function startTimer() {
+            const countdown = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(countdown);
+                    return;
+                }
+
+                timeRemaining--;
+                timerElement.textContent = timeRemaining;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(countdown);
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function endGame(won) {
+            gameActive = false;
+            if (won) {
+                showMessage("Félicitations !", "Bravo tu as gagné !");
+            } else {
+                showMessage("Dommage", "Le temps est écoulé...");
+            }
+        }
+
+        function showMessage(title, message) {
+            messageBox.querySelector('h2').textContent = title;
+            messageBox.querySelector('p').textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        function resetGame() {
+            player = { x: 0, y: 0 };
+            playerElement.style.left = '0px';
+            playerElement.style.top = '0px';
+            timeRemaining = 30;
+            gameActive = true;
+            drawMaze();
+            startTimer();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowUp') movePlayer(0, -1);
+            if (e.key === 'ArrowDown') movePlayer(0, 1);
+            if (e.key === 'ArrowLeft') movePlayer(-1, 0);
+            if (e.key === 'ArrowRight') movePlayer(1, 0);
+        });
+
+        startButton.addEventListener('click', () => {
+            messageBox.style.display = 'none';
+            resetGame();
+        });
+
+        // Lancement initial du jeu
+        drawMaze();
+        startTimer();
+    </script>
+</body>
+</html>
